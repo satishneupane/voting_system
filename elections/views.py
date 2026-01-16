@@ -21,6 +21,8 @@ from elections.services.vote_visibility import (
 from django.contrib.admin.views.decorators import staff_member_required
 from elections.services.results import fptp_results, pr_results
 from elections.models import ElectionControl
+from django.db.models import Count
+from .utils import fptp_winners, pr_seat_allocation
 
 def districts_by_province(request): 
     province_id = request.GET.get('province_id') # matches the GET param from JS
@@ -341,3 +343,82 @@ def fptp_results_view(request):
 @staff_member_required
 def pr_results_view(request):
     return JsonResponse({"results": list(pr_results())})
+
+# ------------------------------
+# FPTP Vote Counts per Candidate
+# ------------------------------
+def fptp_votes_summary(request):
+    """
+    Returns total FPTP votes per candidate, optionally filtered by province/district/EA
+    GET params (optional): province_id, district_id, electoral_area_id
+    """
+    votes = Vote.objects.filter(vote_type='FPTP')
+    
+    # Optional filtering
+    province_id = request.GET.get('province_id')
+    district_id = request.GET.get('district_id')
+    ea_id = request.GET.get('electoral_area_id')
+    
+    if province_id:
+        votes = votes.filter(province_id=province_id)
+    if district_id:
+        votes = votes.filter(district_id=district_id)
+    if ea_id:
+        votes = votes.filter(electoral_area_id=ea_id)
+
+    summary = votes.values('candidate__id', 'candidate__name', 'electoral_area__name').annotate(total_votes=Count('id'))
+    
+    return JsonResponse(list(summary), safe=False)
+
+
+# ------------------------------
+# PR Vote Counts per Party
+# ------------------------------
+def pr_votes_summary(request):
+    """
+    Returns total PR votes per party, optionally filtered by province/district
+    GET params (optional): province_id, district_id
+    """
+    votes = Vote.objects.filter(vote_type='PR')
+    
+    province_id = request.GET.get('province_id')
+    district_id = request.GET.get('district_id')
+    
+    if province_id:
+        votes = votes.filter(province_id=province_id)
+    if district_id:
+        votes = votes.filter(district_id=district_id)
+    
+    summary = votes.values('party__id', 'party__name').annotate(total_votes=Count('id'))
+    
+    return JsonResponse(list(summary), safe=False)
+
+
+# ------------------------------
+# Overall Vote Breakdown
+# ------------------------------
+def votes_breakdown(request):
+    """
+    Returns total votes by type
+    """
+    fptp_count = Vote.objects.filter(vote_type='FPTP').count()
+    pr_count = Vote.objects.filter(vote_type='PR').count()
+    
+    return JsonResponse({
+        "FPTP": fptp_count,
+        "PR": pr_count,
+        "Total": fptp_count + pr_count
+    })
+#Admin vote viewing and monitoring
+
+def seats_summary(request):
+    """
+    Returns both FPTP winners and PR seat allocations
+    """
+    fptp = fptp_winners()
+    pr = pr_seat_allocation(total_seats=110)  # you can adjust total PR seats
+
+    return JsonResponse({
+        "fptp_winners": fptp,
+        "pr_seats": pr
+    })
