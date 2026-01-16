@@ -24,16 +24,6 @@ from elections.models import ElectionControl
 from django.db.models import Count
 from .utils import fptp_winners, pr_seat_allocation
 
-def districts_by_province(request): 
-    province_id = request.GET.get('province_id') # matches the GET param from JS
-    districts = []
-    if province_id:
-        districts = District.objects.filter(province_id=province_id).values('id', 'name')
-        districts_list = list(districts)  # convert queryset to list of dicts
-    else:
-        districts_list = []
-    return JsonResponse(districts_list, safe=False)
-
 def home(request):
     return HttpResponse("Welcome to Voting System!")
 

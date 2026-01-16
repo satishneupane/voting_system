@@ -1,6 +1,22 @@
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from .models import Candidate, Party
+from .models import Candidate, Party, District
+
+
+
+def districts_by_province(request): 
+    """
+    Returns districts for a given province (AJAX helper)
+    GET param: province_id
+    """
+    province_id = request.GET.get('province_id') 
+    districts_list = []
+
+    if province_id:
+        districts = District.objects.filter(province_id=province_id).values('id', 'name')
+        districts_list = list(districts)
+
+    return JsonResponse(districts_list, safe=False)
 
 @login_required
 def voter_profile(request):
