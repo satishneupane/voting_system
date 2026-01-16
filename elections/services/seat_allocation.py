@@ -2,67 +2,80 @@ from django.db.models import Count
 from elections.models import (
     Vote,
     Candidate,
+    ElectoralArea,
     Party,
     FPTPResult,
-    PRResult
+    PRResult,
 )
 
-# ------------------------------
-# FPTP Seat Allocation
-# ------------------------------
+# =========================================================
+# FPTP SEAT ALLOCATION
+# =========================================================
 def allocate_fptp_seats():
     """
-    Winner-takes-all per electoral area.
+    First-Past-The-Post (FPTP) seat allocation.
+
+    Rule:
+    - Each electoral area gets exactly ONE seat
+    - Candidate with the highest votes in that area wins
+
+    Result is stored in FPTPResult table.
     """
-    results = []
 
-    for candidate in Candidate.objects.all():
-        votes = Vote.objects.filter(
-            vote_type="FPTP",
-            candidate=candidate
-        ).count()
+    # Clear previous results (safe re-run)
+    FPTPResult.objects.all().delete()
 
-        if votes == 0:
+    # Loop through each electoral area
+    for area in ElectoralArea.objects.all():
+
+        votes = (
+            Vote.objects.filter(
+                vote_type="FPTP",
+                candidate__electoral_area=area
+            )
+            .values("candidate")
+            .annotate(total_votes=Count("id"))
+            .order_by("-total_votes")
+        )
+
+        if not votes:
             continue
 
-        results.append((candidate, votes))
+        top = votes[0]
+        winner = Candidate.objects.get(id=top["candidate"])
 
-    # Group by electoral area
-    area_map = {}
-    for candidate, votes in results:
-        area = candidate.electoral_area
-        area_map.setdefault(area, []).append((candidate, votes))
-
-    # Pick winners
-    for area, candidates in area_map.items():
-        winner, vote_count = max(candidates, key=lambda x: x[1])
-
-        FPTPResult.objects.update_or_create(
+        FPTPResult.objects.create(
             electoral_area=area,
-            defaults={
-                "winner": winner,
-                "total_votes": vote_count
-            }
+            winner=winner,
+            total_votes=top["total_votes"],
         )
 
 
-# ------------------------------
-# PR Seat Allocation
-# ------------------------------
+# =========================================================
+# PR SEAT ALLOCATION
+# =========================================================
 def allocate_pr_seats(total_pr_seats=110):
     """
-    Proportional representation using simple quota method.
+    Proportional Representation (PR) seat allocation.
+
+    Rule:
+    - Seats distributed proportionally based on PR votes
+    - Uses simple quota method
+    - Only active parties are considered
+
+    Result is stored in PRResult table.
     """
+
+    # Clear previous PR results
     PRResult.objects.all().delete()
 
     party_votes = (
-        Vote.objects
-        .filter(vote_type="PR")
+        Vote.objects.filter(vote_type="PR", party__is_active=True)
         .values("party")
-        .annotate(total=Count("id"))
+        .annotate(total_votes=Count("id"))
     )
 
-    total_votes = sum(p["total"] for p in party_votes)
+    total_votes = sum(p["total_votes"] for p in party_votes)
 
     if total_votes == 0:
         return
@@ -70,10 +83,22 @@ def allocate_pr_seats(total_pr_seats=110):
     quota = total_votes / total_pr_seats
 
     for p in party_votes:
-        seats = int(p["total"] / quota)
+        seats = int(p["total_votes"] / quota)
 
         PRResult.objects.create(
             party=Party.objects.get(id=p["party"]),
-            total_votes=p["total"],
-            seats_allocated=seats
+            total_votes=p["total_votes"],
+            seats_allocated=seats,
         )
+
+
+# =========================================================
+# MASTER RUNNER (OPTIONAL, RECOMMENDED)
+# =========================================================
+def run_seat_allocation():
+    """
+    Runs full election result calculation.
+    Safe to call multiple times.
+    """
+    allocate_fptp_seats()
+    allocate_pr_seats()

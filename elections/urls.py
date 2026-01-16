@@ -1,19 +1,27 @@
 from django.urls import path
-from . import views
-
-app_name = "elections"
+from . import views  # Only import your single views.py
 
 urlpatterns = [
-    # Home / sanity check
-    path("", views.home, name="home"),
+    # -------- API endpoints --------
+    path("api/voter/profile/", views.voter_profile, name="voter-profile"),
+    path("api/candidates/", views.candidate_list, name="candidate-list"),
+    path("api/parties/", views.party_list, name="party-list"),
 
-    # Voting endpoints
-    path("vote/candidate/", views.submit_candidate_vote, name="candidate-vote"),
-    path("vote/party/", views.submit_party_vote, name="party-vote"),
-    path("results/fptp/", views.fptp_results_view),
-    path("results/pr/", views.pr_results_view),
-    path("api/votes/fptp/", views.fptp_votes_summary, name="fptp-votes-summary"),
-    path("api/votes/pr/", views.pr_votes_summary, name="pr-votes-summary"),
-    path("api/votes/breakdown/", views.votes_breakdown, name="votes-breakdown"),
-    path("api/votes/seats", views.seats_summary, name="seats-summary"),
+    # -------- Voting --------
+    path("vote/submit/", views.submit_vote, name="submit-vote"),
+
+    # -------- AJAX helpers --------
+    path("ajax/districts-by-province/", views.districts_by_province, name="districts-by-province"),
 ]
+
+# -------- Results / Monitoring --------
+urlpatterns += [
+    path("results/candidates/", views.candidate_vote_results, name="candidate-results"),
+    path("results/parties/", views.party_vote_results, name="party-results"),
+    path("results/summary/", views.voting_summary, name="voting-summary"),
+    path("results/province/", views.votes_by_province, name="votes-by-province"),
+    path("results/district/", views.votes_by_district, name="votes-by-district"),
+]
+#test_submit_candidate_vote
+#test_submit_party_vote
+#test_candidate_validation

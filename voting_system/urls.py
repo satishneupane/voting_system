@@ -17,16 +17,14 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from elections import views as elections_views
+from elections.views import home
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path("", include("elections.urls")),
-    path('', elections_views.home, name='home'),
-    path('vote/submit/', elections_views.submit_vote, name='home'),
-    path("ajax/districts-by-province/", elections_views.districts_by_province, name='districts-by-province'),
-    path("vote/candidate/", elections_views.test_submit_candidate_vote),
-    path("vote/party/", elections_views.test_submit_party_vote),
-    path("vote/context", elections_views.voting_context),
-    path("validate/candidate/", elections_views.test_candidate_validation, name="test-candidate-validation"),
+    path("admin/", admin.site.urls),
+
+    # Home page
+    path("", home, name="home"),
+
+    # All election-related routes
+    path("elections/", include("elections.urls")),
 ]
