@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-
 # ==============================
 # Province & District
 # ==============================
@@ -107,7 +106,7 @@ class Candidate(models.Model):
 
 
 # ==============================
-# Vote (FINAL – supports FPTP + PR)
+# Vote (supports FPTP + PR)
 # ==============================
 class Vote(models.Model):
     VOTE_TYPE_CHOICES = (
@@ -164,7 +163,11 @@ class Vote(models.Model):
 
     def __str__(self):
         return f"{self.voter} - {self.vote_type}"
-    
+
+
+# ==============================
+# Election Control
+# ==============================
 class ElectionControl(models.Model):
     is_voting_open = models.BooleanField(default=False)
     opened_at = models.DateTimeField(null=True, blank=True)
@@ -176,9 +179,11 @@ class ElectionControl(models.Model):
     class Meta:
         verbose_name = "Election Control"
         verbose_name_plural = "Election Control"
-# ------------------------------
+
+
+# ==============================
 # FPTP Result
-# ------------------------------
+# ==============================
 class FPTPResult(models.Model):
     electoral_area = models.OneToOneField(
         ElectoralArea,
@@ -195,9 +200,9 @@ class FPTPResult(models.Model):
         return f"{self.electoral_area} → {self.winner}"
 
 
-# ------------------------------
+# ==============================
 # PR Result (Party Seats)
-# ------------------------------
+# ==============================
 class PRResult(models.Model):
     party = models.ForeignKey(Party, on_delete=models.CASCADE)
     total_votes = models.PositiveIntegerField()
