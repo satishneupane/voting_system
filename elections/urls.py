@@ -8,6 +8,11 @@ urlpatterns = [
     path("api/candidates/", views.get_candidates, name="candidate-list"),
     path("api/parties/", views.get_parties, name="party-list"),
 
+    # -------- Form Data - Cascading Selects --------
+    path("api/provinces/", views.get_provinces, name="province-list"),
+    path("api/districts/", views.get_districts_by_province, name="district-list"),
+    path("api/constituencies/", views.get_electoral_areas_by_district, name="constituency-list"),
+
     # -------- Voting --------
     path("vote/submit/", views.submit_vote, name="submit-vote"),
     path("vote/candidate/", views.submit_candidate_vote, name="submit-candidate-vote"),

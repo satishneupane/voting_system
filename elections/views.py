@@ -300,3 +300,78 @@ def voter_profile(request):
         "electoral_area": {"id": user.electoral_area.id if user.electoral_area else None, "name": user.electoral_area.name if user.electoral_area else None},
     }
     return JsonResponse(data, status=200)
+
+
+# ==============================
+# Form Data - Cascading Selects
+# ==============================
+def get_provinces(request):
+    """
+    Get all provinces for registration form
+    GET /elections/api/provinces/
+    """
+    provinces = Province.objects.all().values('id', 'name').order_by('name')
+    return JsonResponse(list(provinces), safe=False)
+
+
+def get_districts_by_province(request):
+    """
+    Get all districts for a selected province
+    GET /elections/api/districts/?province_id=1
+    """
+    province_id = request.GET.get('province_id')
+    
+    if not province_id:
+        return JsonResponse({"error": "province_id is required"}, status=400)
+    
+    try:
+        districts = District.objects.filter(
+            province_id=province_id
+        ).values('id', 'name').order_by('name')
+        return JsonResponse(list(districts), safe=False)
+    except:
+        return JsonResponse({"error": "Invalid province_id"}, status=400)
+
+
+def get_electoral_areas_by_province(request):
+    """
+    Get all electoral areas for a selected province
+    GET /elections/api/electoral-areas/?province_id=1
+    """
+    province_id = request.GET.get('province_id')
+    
+    if not province_id:
+        return JsonResponse({"error": "province_id is required"}, status=400)
+    
+    try:
+        electoral_areas = ElectoralArea.objects.filter(
+            province_id=province_id
+        ).values('id', 'name').order_by('name')
+        return JsonResponse(list(electoral_areas), safe=False)
+    except:
+        return JsonResponse({"error": "Invalid province_id"}, status=400)
+
+
+def get_electoral_areas_by_district(request):
+    """
+    Get all electoral areas (constituencies) for a selected district
+    GET /elections/api/constituencies/?district_id=1
+    """
+    district_id = request.GET.get('district_id')
+    
+    if not district_id:
+        return JsonResponse({"error": "district_id is required"}, status=400)
+    
+    try:
+        # Get the district and its province
+        district = District.objects.get(id=district_id)
+        
+        # Electoral areas are linked to province, filter by district's province
+        electoral_areas = ElectoralArea.objects.filter(
+            province_id=district.province_id
+        ).values('id', 'name').order_by('name')
+        return JsonResponse(list(electoral_areas), safe=False)
+    except District.DoesNotExist:
+        return JsonResponse({"error": "Invalid district_id"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)

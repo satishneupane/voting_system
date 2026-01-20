@@ -1,0 +1,404 @@
+{
+  "info": {
+    "name": "Voting System API",
+    "description": "API collection for the Django Voting System - supports both FPTP and PR voting systems",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication & Registration",
+      "item": [
+        {
+          "name": "Register New Voter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"securepassword123\",\n  \"province_id\": 1,\n  \"district_id\": 1,\n  \"electoral_area\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/elections/api/voter/register/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "api", "voter", "register", ""]
+            },
+            "description": "Register a new voter with their geographic location"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Voter Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/api/voter/profile/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "api", "voter", "profile", ""]
+            },
+            "description": "Get the current logged-in voter's profile information"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Form Data - Cascading Selects",
+      "item": [
+        {
+          "name": "Get All Provinces",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/api/provinces/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "api", "provinces", ""]
+            },
+            "description": "Get all provinces for registration form dropdown (Step 1)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Districts by Province",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/api/districts/?province_id=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "api", "districts", ""],
+              "query": [
+                {
+                  "key": "province_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get all districts for selected province (Step 2) - Required: province_id query parameter"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Constituencies by District",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/api/constituencies/?district_id=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "api", "constituencies", ""],
+              "query": [
+                {
+                  "key": "district_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get all constituencies/electoral areas for selected district (Step 3) - Required: district_id query parameter"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Candidates & Parties",
+      "item": [
+        {
+          "name": "Get Candidates for Electoral Area",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/api/candidates/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "api", "candidates", ""]
+            },
+            "description": "Get all candidates in the voter's electoral area (Requires Authentication)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Parties",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/api/parties/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "api", "parties", ""]
+            },
+            "description": "Get all active political parties"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Voting",
+      "item": [
+        {
+          "name": "Submit FPTP Vote (Candidate)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "vote_type",
+                  "value": "FPTP",
+                  "type": "text"
+                },
+                {
+                  "key": "candidate_id",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8000/elections/vote/submit/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "vote", "submit", ""]
+            },
+            "description": "Submit a First-Past-The-Post (candidate) vote (Requires Authentication)"
+          },
+          "response": []
+        },
+        {
+          "name": "Submit PR Vote (Party)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "vote_type",
+                  "value": "PR",
+                  "type": "text"
+                },
+                {
+                  "key": "party_id",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8000/elections/vote/submit/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "vote", "submit", ""]
+            },
+            "description": "Submit a Proportional Representation (party) vote (Requires Authentication)"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Submit Candidate Vote",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/test/vote/candidate/?candidate_id=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "test", "vote", "candidate", ""],
+              "query": [
+                {
+                  "key": "candidate_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Test endpoint to submit a candidate vote (Requires Authentication)"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Submit Party Vote",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/test/vote/party/?party_id=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "test", "vote", "party", ""],
+              "query": [
+                {
+                  "key": "party_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Test endpoint to submit a party vote (Requires Authentication)"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Validate Candidate",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/test/validate/candidate/?candidate_id=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "test", "validate", "candidate", ""],
+              "query": [
+                {
+                  "key": "candidate_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Validate if voter can vote for a specific candidate (Requires Authentication)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Voting Context",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/test/voting/context/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "test", "voting", "context", ""]
+            },
+            "description": "Get voting context for the current user (Requires Authentication)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Results & Monitoring",
+      "item": [
+        {
+          "name": "Get FPTP Vote Results",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/results/candidates/?province_id=1&district_id=1&electoral_area_id=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "results", "candidates", ""],
+              "query": [
+                {
+                  "key": "province_id",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "district_id",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "electoral_area_id",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get FPTP candidate vote results (all results or filtered by geography)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get PR Vote Results",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/results/parties/?province_id=1&district_id=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "results", "parties", ""],
+              "query": [
+                {
+                  "key": "province_id",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "district_id",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get PR party vote results (all results or filtered by geography)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vote Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/results/summary/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "results", "summary", ""]
+            },
+            "description": "Get breakdown of FPTP vs PR votes and total votes cast"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Seats Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/elections/results/seats/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["elections", "results", "seats", ""]
+            },
+            "description": "Get seat allocation results for both FPTP winners and PR seats"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
