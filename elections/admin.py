@@ -2,7 +2,18 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.db.models import Count
 from requests import request
-from .models import Province, District, User, ElectoralArea, Candidate, Party, Vote, ElectionControl, FPTPResult, PRResult
+from .models import (
+    Province,
+    District,
+    User, 
+    ElectoralArea,
+    Candidate, 
+    Party, 
+    Vote, 
+    ElectionControl,
+    FPTPResult,
+    PRResult,
+)
 
 # -----------------------------
 # Province & District Admin
@@ -57,6 +68,7 @@ class CustomUserAdmin(UserAdmin):
 class ElectoralAreaAdmin(admin.ModelAdmin):
     list_display = ('name', 'province')
     list_filter = ('province',)
+    list_editable = ('province',)
     search_fields = ('name', 'province__name')
 
 
@@ -65,9 +77,9 @@ class ElectoralAreaAdmin(admin.ModelAdmin):
 # -----------------------------
 @admin.register(Candidate)
 class CandidateAdmin(admin.ModelAdmin):
-    list_display = ('name', 'electoral_area')
-    list_filter = ('electoral_area',)
-    search_fields = ('name', 'electoral_area__name')
+    list_display = ("id", "name", "electoral_area", "party")
+    list_filter = ("electoral_area", "party")
+    search_fields = ("name",)
 
 
 # -----------------------------
@@ -75,9 +87,9 @@ class CandidateAdmin(admin.ModelAdmin):
 # -----------------------------
 @admin.register(Party)
 class PartyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'symbol', 'is_active')
-    list_filter = ('is_active',)
-    search_fields = ('name',)
+    list_display = ("id", "name", "symbol", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("name",)
 
 #----------------------------------------
 #For Checking if voting is active or not
@@ -99,9 +111,29 @@ except admin.sites.NotRegistered:
 
 @admin.register(Vote)
 class VoteAdmin(admin.ModelAdmin):
-    list_display = ('voter', 'vote_type', 'province', 'district', 'electoral_area', 'candidate_or_party', 'created_at')
-    list_filter = ('province', 'district', 'electoral_area', 'vote_type')
-    search_fields = ('voter__username', 'candidate__name', 'party__name')
+    list_display = (
+        "id",
+        "voter",
+        "vote_type",
+        "candidate_or_party",
+        "party",
+        "province",
+        "district",
+        "electoral_area",
+        "created_at",
+    )
+
+    list_filter = (
+        "vote_type",
+        "province",
+        "district",
+    )
+
+    search_fields = (
+        "voter__username",
+        "candidate__name",
+        "party__name",
+    )
 
     # Show Candidate or Party depending on vote type
     def candidate_or_party(self, obj):
@@ -117,7 +149,7 @@ class VoteAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         # Aggregate votes per candidate and party
         candidate_votes = Candidate.objects.annotate(vote_count=Count('votes')).order_by('-vote_count')
-        party_votes = Party.objects.annotate(vote_count=Count('vote')).order_by('-vote_count')
+        party_votes = Party.objects.annotate(vote_count=Count('votes')).order_by('-vote_count')
 
         extra_context = extra_context or {}
         extra_context['candidate_votes'] = candidate_votes
